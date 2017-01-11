@@ -5,8 +5,8 @@ import FirebaseDatabase
 
 class ViewController: JSQMessagesViewController {
    var messages = [JSQMessage]()
-   var mesDate : [String?] = []
-
+   var mesMonth : [String?] = []
+    var mesDay : [String?] = []
     override func viewDidLoad() {
         super.viewDidLoad()
         senderDisplayName = "A"
@@ -31,10 +31,7 @@ class ViewController: JSQMessagesViewController {
 //            self.collectionView.reloadData()
 //        })
         
-        let formatter = DateFormatter()
-        formatter.locale = NSLocale(localeIdentifier: "ja_JP") as Locale!
-        formatter.dateFormat = "yyyy-MM-dd HH:mm"
-        
+       //Firebase ovserve
         let ref = FIRDatabase.database().reference().child("messages")
         ref.observe(.childAdded, with: { snapshot in
             print("DEBUG_PRINT::: .childAddedイベントが発生しました。")
@@ -47,7 +44,8 @@ class ViewController: JSQMessagesViewController {
             let mes = JSQMessage(senderId: senderId, displayName: displayName,  text: text)
             //let mes2 = JSQMessage(senderId: senderId, senderDisplayName: displayName, date: Date(), text: text)
             self.messages.append(mes!)
-            self.mesDate.append(dic["date"]!)
+            self.mesMonth.append(dic["Month"]!)
+            self.mesDay.append(dic["day"]!)
             self.collectionView.reloadData()
         })
     }
@@ -84,10 +82,48 @@ class ViewController: JSQMessagesViewController {
 //        print(":::1")
 //        return test2
 //    }
-    override func collectionView(_ collectionView: JSQMessagesCollectionView!, attributedTextForCellTopLabelAt indexPath: IndexPath!) -> NSAttributedString!{
-        let Date = mesDate[indexPath.row]
-        return NSAttributedString(string: Date!)
+    
+    override func collectionView(_ collectionView: JSQMessagesCollectionView!, attributedTextForCellTopLabelAt indexPath: IndexPath!) -> NSAttributedString!
+    {
+        
+        let date = Date()
+        let Mformatter = DateFormatter()
+        Mformatter.dateFormat = "MM"
+        var MdateString:String = Mformatter.string(from: date)
+        let Mstart = MdateString.substring(to: MdateString.index(after: MdateString.startIndex))
+        if(Mstart == "0"){
+            MdateString = MdateString.substring(from: MdateString.index(after: MdateString.startIndex))
+        }
+        
+        let dformatter = DateFormatter()
+        dformatter.dateFormat = "dd"
+        var ddateString:String = dformatter.string(from: date)
+        let dstart = ddateString.substring(to: ddateString.index(after: ddateString.startIndex))
+        if(dstart == "0"){
+            ddateString = ddateString.substring(from: ddateString.index(after: ddateString.startIndex))
+        }
 
+        if(indexPath.row >= 1)
+        {
+           if(mesMonth[indexPath.row - 1]! + mesDay[indexPath.row - 1]! == mesMonth[indexPath.row]! + mesDay[indexPath.row]!){
+               return nil
+           }else{
+                   if(mesMonth[indexPath.row]! + mesDay[indexPath.row]! == MdateString + ddateString)
+                   {
+                    return NSAttributedString(string: "Today")
+                   }else
+                   {
+                    return NSAttributedString(string: mesMonth[indexPath.row]! + "月" + mesDay[indexPath.row]! + "日")
+                   }
+           }
+        }else
+        {
+            if(mesMonth[indexPath.row]! + mesDay[indexPath.row]! == MdateString + ddateString){
+                return NSAttributedString(string: "Today")
+            }else{
+                return NSAttributedString(string: mesMonth[indexPath.row]! + "月" + mesDay[indexPath.row]! + "日")
+            }
+        }
     }
 //    override func collectionView(_ collectionView: JSQMessagesCollectionView!, attributedTextForMessageBubbleTopLabelAt indexPath: IndexPath!) -> NSAttributedString!{
 //         print(":::3")
@@ -97,8 +133,19 @@ class ViewController: JSQMessagesViewController {
 
     
     let testCG = CGFloat(20.0)
+    let zeroCG = CGFloat(0.0)
     override func collectionView(_ collectionView: JSQMessagesCollectionView!, layout collectionViewLayout: JSQMessagesCollectionViewFlowLayout!, heightForCellTopLabelAt indexPath: IndexPath!) -> CGFloat{
-        return testCG
+        
+        if(indexPath.row >= 1){
+            if(mesMonth[indexPath.row - 1]! + mesDay[indexPath.row - 1]! == mesMonth[indexPath.row]! + mesDay[indexPath.row]!){
+                return zeroCG
+            }else{
+                return testCG
+            }
+        }else{
+            return testCG
+        }
+
     }
 //    override func collectionView(_ collectionView: JSQMessagesCollectionView!, layout collectionViewLayout: JSQMessagesCollectionViewFlowLayout!, heightForMessageBubbleTopLabelAt indexPath: IndexPath!) -> CGFloat{
 //        print(":::9")
@@ -115,10 +162,48 @@ class ViewController: JSQMessagesViewController {
     //送信ボタンを押したとき,データベースにコメントを保存
     override func didPressSend(_ button: UIButton!, withMessageText text: String!, senderId: String!, senderDisplayName: String!, date: Date!){
         inputToolbar.contentView.textView.text = ""
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy年MM月dd日 HH時mm分"
-        let dateString:String = formatter.string(from: date)
-        let mes = ["senderId": senderId!, "text": text!, "displayName": senderDisplayName!, "date": dateString]
+//        let yformatter = DateFormatter()
+//        yformatter.dateFormat = "yyyy年MM月dd日HH時mm分"
+//        let ydateString:String = yformatter.string(from: date)
+        let yformatter = DateFormatter()
+        yformatter.dateFormat = "yyyy"
+        let ydateString:String = yformatter.string(from: date)
+        
+        let Mformatter = DateFormatter()
+        Mformatter.dateFormat = "MM"
+        var MdateString:String = Mformatter.string(from: date)
+        let Mstart = MdateString.substring(to: MdateString.index(after: MdateString.startIndex))
+        if(Mstart == "0"){
+            MdateString = MdateString.substring(from: MdateString.index(after: MdateString.startIndex))
+        }
+        
+        let dformatter = DateFormatter()
+        dformatter.dateFormat = "dd"
+        var ddateString:String = dformatter.string(from: date)
+        let dstart = ddateString.substring(to: ddateString.index(after: ddateString.startIndex))
+        if(dstart == "0"){
+            ddateString = ddateString.substring(from: ddateString.index(after: ddateString.startIndex))
+        }
+        
+        let Hformatter = DateFormatter()
+        Hformatter.dateFormat = "HH"
+        let HdateString:String = Hformatter.string(from: date)
+//        let Hstart = HdateString.substring(to: HdateString.index(after: HdateString.startIndex))
+//        if(Hstart == "0"){
+//            HdateString = "午前" + HdateString.substring(from: HdateString.index(after: HdateString.startIndex))
+//        }else if(Int(HdateString)! <= 11){
+//                HdateString = "午前" + HdateString
+//            }else{
+//                let IntHdateString = Int(HdateString)! - 12
+//                HdateString = "午後" + String(IntHdateString)
+//            }
+        
+        let mformatter = DateFormatter()
+        mformatter.dateFormat = "mm"
+        let mdateString:String = Mformatter.string(from: date)
+        
+        //let mes = ["senderId": senderId!, "text": text!, "displayName": senderDisplayName!, "date": dateString]
+        let mes = ["senderId": senderId!, "text": text!, "displayName": senderDisplayName!, "year": ydateString, "Month": MdateString, "day": ddateString, "Hour": HdateString, "minute": mdateString]
         let ref = FIRDatabase.database().reference()
         ref.child("messages").childByAutoId().setValue(mes)
     }
